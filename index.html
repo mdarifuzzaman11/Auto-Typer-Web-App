@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto Typer Web App</title>
+    <style>
+        /* Responsive Design */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            max-width: 600px;
+            padding-bottom: 50px; /* Added padding after the code block */
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+            }
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        label, select, input[type="number"], button, input[type="text"] {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"], select, textarea, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        #message {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button, #scrollToTopBtn, #scrollToBottomBtn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-block;
+            border-radius: 20px;
+            background-image: linear-gradient(to right, #0062E6, #33AEFF);
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+
+        button:hover, #scrollToTopBtn:hover, #scrollToBottomBtn:hover {
+            background-image: linear-gradient(to left, #0062E6, #33AEFF);
+        }
+
+        /* Code Block Style */
+        .code-block {
+            position: relative;
+            background-color: #333;
+            border-radius: 5px;
+            padding: 10px;
+            color: #f8f8f2;
+            font-family: monospace;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .code-block:before {
+            content: 'JavaScript';
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #f8f8f2;
+            color: #333;
+            padding: 3px 10px;
+            font-size: 12px;
+            border-bottom-left-radius: 5px;
+        }
+
+        .code-block code {
+            white-space: pre-wrap;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #007bff;
+            color: white;
+            padding: 3px 10px;
+            border: none;
+            cursor: pointer;
+            border-bottom-right-radius: 5px;
+            font-size: 12px;
+        }
+
+        /* Scroll Button Styles */
+        #scrollToTopBtn, #scrollToBottomBtn {
+            position: fixed;
+            right: 30px;
+            z-index: 99;
+            font-size: 18px;
+            border: none;
+            outline: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            display: none;
+            margin: 0;
+        }
+
+        #scrollToTopBtn {
+            bottom: 80px;
+        }
+
+        #scrollToBottomBtn {
+            bottom: 30px;
+        }
+
+        /* Preview Box Style */
+        #preview {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px dashed #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Notification Style */
+        .notification {
+            color: green;
+            margin-left: 5px;
+            display: none;
+        }
+
+        /* Information Card Style */
+        .info-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* Footer Styles */
+        #footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* Copyright Styles */
+        .copyright {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* Added styles for "View Code" title */
+        .view-code {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body onscroll="scrollFunction()">
+    <div class="container">
+        <h1>Auto Typer Web App</h1>
+        <div class="info-card">
+            <p>Welcome to the Auto Typer Web App! This tool allows you to generate scripts for automatic typing. Here's how to use the features:</p>
+            <ul>
+                <li><strong>Message:</strong> Enter the text you want to be typed automatically.</li>
+                <li><strong>Typing Speed:</strong> Choose how fast the text should be typed.</li>
+                <li><strong>Custom Speed:</strong> Set a specific typing speed in words per minute (wpm).</li>
+                <li><strong>Cursor Position:</strong> Decide where in the text the typing should start.</li>
+                <li><strong>Generate Script:</strong> Creates the JavaScript needed to type the text automatically.</li>
+                <li><strong>Copy code:</strong> Copy the generated script to your clipboard.</li>
+            </ul>
+        </div>
+        <label for="message">Message:</label>
+        <textarea id="message" placeholder="Enter or paste your text here" oninput="updatePreview()"></textarea>
+        <h2>Preview:</h2>
+        <div id="preview"></div> <!-- Preview box -->
+        <label for="speed">Typing Speed:</label>
+        <select id="speed" onchange="toggleCustomSpeedInput()">
+            <option value="fast">Fast (120 wpm)</option>
+            <option value="normal">Normal (60 wpm)</option>
+            <option value="slow">Slow (30 wpm)</option>
+            <option value="custom">Custom</option>
+        </select>
+        <div id="customSpeedContainer" style="display: none;">
+            <label for="customSpeed">Custom Speed (wpm):</label>
+            <input type="number" id="customSpeed" placeholder="Enter speed in wpm">
+        </div>
+        <label for="cursorPosition">Cursor Position:</label>
+        <input type="number" id="cursorPosition" placeholder="Enter cursor position" value="0">
+        <button onclick="generateScript()">Generate Script</button>
+        <!-- "View Code" title is outside the code block -->
+        <h2 class="view-code">View Code</h2>
+        <div class="code-block">
+            <pre><code id="generatedScript" readonly></code></pre>
+            <!-- "Copy code" button is inside the code block -->
+            <button class="copy-button" onclick="copyScript()">Copy code</button>
+        </div>
+        <span class="notification" id="copyNotification">Copied!</span>
+    </div>
+    <div id="footer">
+        <div class="copyright">
+            &copy; <span id="currentYear"></span> MD Arifuzzaman | Version: v1.0.0 | Scripts generated: <span id="versionNumber">1</span>
+        </div>
+    </div>
+    <button onclick="topFunction()" id="scrollToTopBtn" title="Go to top">↑</button>
+    <button onclick="bottomFunction()" id="scrollToBottomBtn" title="Go to bottom">↓</button>
+    <script>
+        let typingSpeed;
+        let message;
+        let cursorPosition = 0;
+
+        // Initialize the script count to 1
+        let scriptCount = 1;
+
+        // Get the current year and update the copyright text
+        const currentYear = new Date().getFullYear();
+        document.getElementById('currentYear').textContent = currentYear;
+
+        function updatePreview() {
+            message = document.getElementById('message').value;
+            document.getElementById('preview').innerHTML = message.replace(/\n/g, '<br>');
+        }
+
+        function toggleCustomSpeedInput() {
+            const speedSelect = document.getElementById('speed');
+            const customSpeedContainer = document.getElementById('customSpeedContainer');
+            if (speedSelect.value === 'custom') {
+                customSpeedContainer.style.display = 'block';
+            } else {
+                customSpeedContainer.style.display = 'none';
+            }
+        }
+
+        function generateScript() {
+            message = document.getElementById('message').value;
+            if (!message.trim()) {
+                alert('Please enter a message.');
+                return;
+            }
+
+            cursorPosition = parseInt(document.getElementById('cursorPosition').value, 10) || 0;
+            const speedSelect = document.getElementById('speed').value;
+            const customSpeed = document.getElementById('customSpeed').value;
+            typingSpeed = calculateInterval(speedSelect === 'custom' ? customSpeed : getWpm(speedSelect));
+
+            const script = `
+                // Paste this script in the browser's console on the target page
+                function getRandomInterval(min, max) {
+                    return Math.floor(Math.random() * (max - min + 1) + min);
+                }
+
+                function typeMessage(element, message, averageInterval, startPosition) {
+                    let i = startPosition;
+                    const typing = () => {
+                        if (i < message.length) {
+                            element.value += message[i];
+                            i++;
+                            // Scroll the textarea to the end
+                            element.scrollTop = element.scrollHeight;
+                            setTimeout(typing, getRandomInterval(averageInterval * 0.7, averageInterval * 1.3));
+                        }
+                    };
+                    typing();
+                }
+
+                const inputFields = document.querySelectorAll('input[type="text"], textarea');
+                inputFields.forEach(field => {
+                    typeMessage(field, \`${message.replace(/\\n/g, '\\\\n')}\`, ${typingSpeed}, ${cursorPosition});
+                });
+            `;
+
+            document.getElementById('generatedScript').textContent = script;
+
+            // Update the script count
+            scriptCount++;
+            document.getElementById('versionNumber').textContent = scriptCount;
+        }
+
+        function copyScript() {
+            const script = document.getElementById('generatedScript');
+            const range = document.createRange();
+            range.selectNodeContents(script);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            document.execCommand('copy');
+            showNotification();
+        }
+
+        function showNotification() {
+            const notification = document.getElementById('copyNotification');
+            notification.style.display = 'inline';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000); // Notification disappears after 4 seconds
+        }
+
+        function getWpm(speed) {
+            switch(speed) {
+                case 'fast': return 120;
+                case 'normal': return 60;
+                case 'slow': return 30;
+                default: return parseInt(speed) || 60;
+            }
+        }
+
+        function calculateInterval(wpm) {
+            return 60000 / (wpm * 5);
+        }
+
+        function scrollFunction() {
+            var scrollToTopBtn = document.getElementById("scrollToTopBtn");
+            var scrollToBottomBtn = document.getElementById("scrollToBottomBtn");
+
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                scrollToTopBtn.style.display = "block";
+            } else {
+                scrollToTopBtn.style.display = "none";
+            }
+
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 20) {
+                scrollToBottomBtn.style.display = "none";
+            } else {
+                scrollToBottomBtn.style.display = "block";
+            }
+        }
+
+        function topFunction() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
+        function bottomFunction() {
+            window.scrollTo({ left: 0, top: document.body.scrollHeight, behavior: "smooth" });
+        }
+    </script>
+</body>
+</html>
